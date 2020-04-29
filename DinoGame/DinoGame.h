@@ -1,10 +1,17 @@
 #include <Arduino.h>
-#include <WROVER_KIT_LCD.h>
 #include "sprites/dino.h"
 #include "sprites/ground.h"
 #include "sprites/pterodactyl.h"
-#include "font/PressStart2P.h"
 #include "sprites/retry.h"
+#include "SPI.h"
+#include "Adafruit_GFX.h"
+#include "Adafruit_ILI9341.h"
+#include "font/PressStart2P.h"
+#define TFT_DC 22
+#define TFT_CS 21
+#define BACKLIGHT_PIN 27
+#define TOUCH_CS 2
+//Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
 enum class walk_style
 {
@@ -43,7 +50,7 @@ struct ground
 };
 
 enum class DelayType{
-	Miliseconds, 
+	Miliseconds,
 	Microseconds
 };
 
@@ -52,7 +59,7 @@ enum class DelayType{
 class DinoGame
 {
 public:
-	DinoGame(WROVER_KIT_LCD &display);
+	DinoGame(Adafruit_ILI9341 &display);
 	void loop();
 	void jump();
 	void duck();
@@ -87,7 +94,7 @@ private:
 	uint8_t flash_count = 2;
 	uint32_t highScore = 0;
 	bool flashing = false, drawn = false;
-	WROVER_KIT_LCD &display;
+	Adafruit_ILI9341 &display;
 	DelayType type = DelayType::Miliseconds;
 	uint16_t delayValue = 1;
 	unsigned long steps = 0, previous_time = 0;

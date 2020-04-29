@@ -1,6 +1,6 @@
 #include "DinoGame.h"
 
-DinoGame::DinoGame(WROVER_KIT_LCD &display): display(display){}
+DinoGame::DinoGame(Adafruit_ILI9341 &display): display(display){}
 
 void DinoGame::loop(){
     if(colided){
@@ -15,7 +15,7 @@ void DinoGame::loop(){
     shift += 2 + speed_modifier;
 
     manageBird();
-    
+
     if (!jumping) {
         if (!ducking) {
             if (runstate) overlapDino(arr, topJumpingLayer, dino_leftstep, 0, walk_style::walking);
@@ -39,11 +39,11 @@ void DinoGame::loop(){
         overlapDino(arr, topJumpingLayer, dino_default, jumpHeigth, walk_style::walking);
     }
 
-    if (getSteps() % 10 - speed_modifier == 0) runstate = !runstate; 
+    if (getSteps() % 10 - speed_modifier == 0) runstate = !runstate;
 	/*Speed modifier is a placeholder variable.
 	The initial idea was to speed up the game relative to the score but since i didn't use floating point numbers every time the modifier
 	increments the game speeds up exponentialy so it's not used*/
-    
+
     step();
     draw();
 }
@@ -83,7 +83,7 @@ void DinoGame::modifyGroundBuffer(){
     uint8_t index = ((sizeof(normalGrounds) / sizeof(normalGrounds[0])) * 10);
     nextGroundElement = (uint16_t*)normalGrounds[random(100) > 80];
     nextGroundType = ground_type::ground;
-  } else { 
+  } else {
 	uint8_t index = ((sizeof(cactusGrounds) / sizeof(cactusGrounds[0])) * 10);
 	nextGroundElement = (uint16_t*)cactusGrounds[random(index) / 10];
 	nextGroundType = ground_type::cactus;
@@ -122,10 +122,15 @@ void DinoGame::newGame(){
   groundArray[2].set(ground_0, ground_type::ground);
   groundArray[3].set(ground_0, ground_type::ground);
   groundArray[4].set(cactus_2, ground_type::cactus);
-  display.fillScreen(WROVER_WHITE);
+  display.setRotation(0);
+  display.fillScreen(ILI9341_WHITE);
   display.setFont(&PressStart2P_Regular6pt7b);
   display.setTextSize(1);
   drawTopScore();
+  display.setCursor(32, 180);
+  display.print("Use [Y+] to Jump");
+  display.setCursor(32, 210);
+  display.print("Use [Y-] to Duck");
 }
 
 bool DinoGame::isGameOver(){
@@ -142,10 +147,10 @@ void DinoGame::endGame(){
   overlapDino(arr, topJumpingLayer, dino_gameover, jumpHeigth, walk_style::walking);
   draw();
   display.setTextColor(0x738E, 0);
-  display.setCursor(110, 70);
+  display.setCursor(70, 70);
   display.print("GAME OVER");
-  display.drawBitmap(148, 80, 32, 29, retry);
-  
+  delay(1000);
+  display.drawRGBBitmap(110,80, retry, 32, 29);
 }
 
 void DinoGame::drawScore(){
@@ -154,10 +159,10 @@ void DinoGame::drawScore(){
   if (last != current && !flashing) {
     if (current > 99999) current = 99999;
     String current_s = scoreToString(current);
-    display.setCursor(260, 30);
-    display.setTextColor(WROVER_WHITE, 0);
+    display.setCursor(160, 30);
+    display.setTextColor(ILI9341_WHITE, 0);
     display.print(last_s);
-    display.setCursor(260, 30);
+    display.setCursor(160, 30);
     display.setTextColor(0x528A, 0);
     display.print(current_s);
     last = current;
@@ -166,12 +171,12 @@ void DinoGame::drawScore(){
     if (current % 100 == 0){
         flashing = true;
         last_flash_time = getSteps();
-    } 
+    }
   }
   else if (flashing) { //Game's built in step function is used instead of millis because it gives consistant delays
-    if (flash_count % 2 == 0) display.setTextColor(WROVER_WHITE, 0);
+    if (flash_count % 2 == 0) display.setTextColor(ILI9341_WHITE, 0);
     else display.setTextColor(0x528A, 0);
-    display.setCursor(260, 30);
+    display.setCursor(160, 30);
     if (!drawn) {
       drawn = true;
       display.print(last_s);
@@ -189,8 +194,8 @@ void DinoGame::drawScore(){
 }
 
 void DinoGame::drawTopScore(){
-    display.setTextColor(0x738E, 0);
-    display.setCursor(152, 30);
+  display.setTextColor(0x738E, 0);
+    display.setCursor(52, 30);
     display.print("HI ");
     display.print(scoreToString(highScore));
 }
@@ -206,7 +211,7 @@ String DinoGame::scoreToString(uint32_t score){
     return score_s;
 }
 
-void DinoGame::shiftArrays(uint16_t buff[], const uint16_t arr1[], const uint16_t arr2[], const uint16_t arr3[], 
+void DinoGame::shiftArrays(uint16_t buff[], const uint16_t arr1[], const uint16_t arr2[], const uint16_t arr3[],
                                         const uint16_t arr4[], const uint16_t arr5[], const uint16_t shiftValue){
     memset(buff, 0xFF, 9600); //This is the part the bird flies in when it's in the top position
     uint16_t count = 4800, line = 0; //4800 (=320*15) offsets the starting drawing position 15 lines downward (also the offset from the part the bird flies in)
@@ -289,7 +294,8 @@ unsigned long DinoGame::getSteps(){
 }
 
 void DinoGame::draw(){
-    display.drawBitmap(0, 78, 320, 53, arr);
-    display.drawBitmap(15, 19, 34, 59, topJumpingLayer);
+  display.setRotation(0);
+    display.drawRGBBitmap(0, 78, arr, 320, 53);
+    display.drawRGBBitmap(15, 19,topJumpingLayer, 34, 59);
     drawScore();
 }
